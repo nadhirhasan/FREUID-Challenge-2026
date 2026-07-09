@@ -1,0 +1,9 @@
+# Pinned to the exact versions used for training/inference (see ../report/ for details).
+# The default Linux "torch" wheel from PyPI bundles CUDA runtime libraries and auto-falls
+# back to CPU execution when no GPU is visible (see prepare_submission.py's device check) --
+# no separate CPU/GPU build selection needed.
+torch==2.6.0
+timm==1.0.27
+opencv-python-headless==4.10.0.84
+numpy==1.24.4
+pandas==2.2.3
