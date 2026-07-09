@@ -6,3 +6,10 @@ external/
 checkpoints/
 out/
 *.csv.local
+report/*.aux
+report/*.log
+report/*.out
+report/*.bbl
+report/*.blg
+report/*.fls
+report/*.fdb_latexmk

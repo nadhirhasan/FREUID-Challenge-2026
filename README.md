@@ -1,6 +1,6 @@
 # FREUID Challenge 2026 — Reproducibility Repository
 
-Team: **\<FILL IN TEAM NAME>** · Kaggle usernames: **\<FILL IN>**
+Team: **Nadhir Hasan** · Kaggle username: **Nadhir Hasan**
 
 This repository contains the training code, inference code, and a runnable Docker
 submission entrypoint for our FREUID Challenge 2026 solution (tag `cv4`). See

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FREUID Challenge 2026 — submission entrypoint (Team: <FILL IN TEAM NAME>).
+FREUID Challenge 2026 — submission entrypoint (Team: Nadhir Hasan).
 
 Model: FreuidModel (DINOv2-L ViT + LoRA r=16 + per-patch MIL head), trained via
 ../src/train.py on FREUID + IDNet-mixed data with the annotation-driven attack suite

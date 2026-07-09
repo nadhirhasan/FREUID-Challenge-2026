@@ -1,5 +1,5 @@
 # FREUID Challenge 2026 — reproducibility Dockerfile
-# Team: <FILL IN TEAM NAME>
+# Team: Nadhir Hasan
 #
 # Build (from repo root):
 #   docker build -t freuid-repro:local .
