@@ -17,8 +17,8 @@ Final Kaggle submission(s):
   distribution, and Pick 2 under distribution shift; please verify against
   whichever submission Kaggle uses for our final score.
 Repository (this should be public git repository): https://github.com/nadhirhasan/FREUID-Challenge-2026
-Commit SHA: 6419163341f5746e1b3baa37fe6ef6c485033c26
-Technical report (PDF): https://github.com/nadhirhasan/FREUID-Challenge-2026/blob/6419163341f5746e1b3baa37fe6ef6c485033c26/report/freuid_technical_report.pdf
+Commit SHA: 976b3cd0bae375a8c6fa39aa6af4a36a1f460e12
+Technical report (PDF): https://github.com/nadhirhasan/FREUID-Challenge-2026/blob/976b3cd0bae375a8c6fa39aa6af4a36a1f460e12/report/freuid_technical_report.pdf
 We confirm this repository at the stated commit reproduces our selected final
 submission and complies with the competition rules.
 Signed (team captain): [FILL: your Kaggle username]
