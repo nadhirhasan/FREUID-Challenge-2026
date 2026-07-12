@@ -4,7 +4,7 @@
 # Build (from repo root):
 #   docker build -t freuid-repro:local .
 # Run (organizer contract):
-#   docker run --rm --network none \
+#   docker run --rm --gpus all --network none \
 #     -v /path/to/flat/test/images:/data:ro \
 #     -v "$(pwd)/out:/submissions" \
 #     freuid-repro:local

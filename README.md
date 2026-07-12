@@ -171,7 +171,7 @@ docker build -t freuid-repro:local .
 # PICK 1 (primary) — reproduces Kaggle submission "sub_cv3_pagg_tta4.csv"
 # (cv3 weights + patch re-agg top-5%/w=0.25 + 4-scale TTA).
 # These are the image defaults, so no -e flags are needed:
-docker run --rm \
+docker run --rm --gpus all \
   --network none \
   -v /path/to/flat/test/images:/data:ro \
   -v "$(pwd)/out:/submissions" \
@@ -179,7 +179,7 @@ docker run --rm \
 
 # PICK 2 — reproduces Kaggle submission "sub_cv5_full_ep2_pagg_tta4.csv"
 # (cv5_ep2 weights; all other settings identical):
-docker run --rm \
+docker run --rm --gpus all \
   --network none \
   -e FREUID_MODEL_PATH=/models/cv5_full_ep2.pt \
   -v /path/to/flat/test/images:/data:ro \
