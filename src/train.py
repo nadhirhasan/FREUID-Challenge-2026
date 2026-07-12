@@ -180,6 +180,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--holdout", type=str, default=None)
     ap.add_argument("--fold", type=int, default=None)
+    ap.add_argument("--full_data", action="store_true",
+                    help="train on ALL FREUID data (no held-out FREUID fold) -- for the FINAL "
+                         "model once the recipe is locked in and no further FREUID-side "
+                         "iteration is planned. Selection still uses HELDOUT-IDNet only "
+                         "(zero FREUID data cost either way). The 'val=' FREUID sample printed "
+                         "is informational only -- it IS included in training, not held out.")
     ap.add_argument("--epochs", type=int, default=4)
     ap.add_argument("--bs", type=int, default=24)
     ap.add_argument("--eval_bs", type=int, default=16)
@@ -205,6 +211,11 @@ def main():
                     help="IDNet countries mixed into TRAINING (comma list, '' to disable IDNet mixing entirely)")
     ap.add_argument("--heldout_idnet", type=str, default="EST_scanned,SVK_scanned",
                     help="IDNet countries used ONLY for the generalization eval, never trained on")
+    ap.add_argument("--idn_val_from_unused", action="store_true",
+                    help="no country held out -- all --idnet_countries appear in training, but "
+                         "validation is sampled from the images NOT selected into the lim_idn "
+                         "training cap (same countries, disjoint images, zero row-level overlap "
+                         "with training; used when --heldout_idnet '')")
     ap.add_argument("--lim_idn", type=int, default=56000, help="cap on IDNet training rows (balanced by label)")
     ap.add_argument("--idn_val_n", type=int, default=4000, help="HELDOUT-IDNet eval sample size")
     ap.add_argument("--select_on", type=str, default="idnet", choices=["idnet", "hard", "clean"],
@@ -215,13 +226,19 @@ def main():
     H, W = (int(v) for v in args.res.lower().split("x"))
 
     df = pd.read_csv(os.path.join(ROOT, "splits", "folds.csv"))
-    if args.holdout:
+    if args.full_data:
+        vname = "full"
+        tr = df.copy()
+        va = df.groupby(["type", "label"], group_keys=False).apply(
+            lambda g: g.sample(min(len(g), 200), random_state=0))  # informational only, IN training
+    elif args.holdout:
         val_mask = df.type == args.holdout; vname = "hold_" + args.holdout.replace("/", "_")
+        tr, va = df[~val_mask].copy(), df[val_mask].copy()
     elif args.fold is not None:
         val_mask = df.strat_fold == args.fold; vname = f"fold{args.fold}"
+        tr, va = df[~val_mask].copy(), df[val_mask].copy()
     else:
-        raise SystemExit("specify --holdout or --fold")
-    tr, va = df[~val_mask].copy(), df[val_mask].copy()
+        raise SystemExit("specify --holdout, --fold, or --full_data")
     if args.limit:
         tr = tr.sample(args.limit, random_state=0); va = va.sample(min(args.limit, len(va)), random_state=0)
     tr["source"] = "freuid"; tr["path"] = ""
@@ -229,16 +246,28 @@ def main():
     idn_val = None
     if args.idnet_countries:
         idn = pd.read_csv(os.path.join(ROOT, "external", "idnet_cropped_index.csv"))
-        idn_tr = idn[idn.type.isin(args.idnet_countries.split(","))]
+        idn_pool = idn[idn.type.isin(args.idnet_countries.split(","))]
         if args.lim_idn:
-            idn_tr = idn_tr.groupby("label", group_keys=False).apply(
+            idn_tr = idn_pool.groupby("label", group_keys=False).apply(
                 lambda g: g.sample(min(len(g), args.lim_idn // 2), random_state=0))
+        else:
+            idn_tr = idn_pool
         cols = ["id", "label", "type", "source", "path"]
         tr = pd.concat([tr[cols], idn_tr[cols]], ignore_index=True)
 
-        idn_ho = idn[idn.type.isin(args.heldout_idnet.split(","))]
-        idn_val = idn_ho.groupby("label", group_keys=False).apply(
-            lambda g: g.sample(min(len(g), args.idn_val_n // 2), random_state=1))
+        if args.heldout_idnet:
+            idn_ho = idn[idn.type.isin(args.heldout_idnet.split(","))]
+            idn_val = idn_ho.groupby("label", group_keys=False).apply(
+                lambda g: g.sample(min(len(g), args.idn_val_n // 2), random_state=1))
+        elif args.idn_val_from_unused:
+            # every country trains; validation = images the lim_idn sample above did NOT
+            # pick (same countries, disjoint rows, zero overlap with training by construction).
+            unused = idn_pool[~idn_pool.id.isin(set(idn_tr.id))]
+            idn_val = unused.groupby("label", group_keys=False).apply(
+                lambda g: g.sample(min(len(g), args.idn_val_n // 2), random_state=1))
+        # else: no held-out IDNet slice at all -> idn_val stays None, idl stays None;
+        # sel_map["idnet"] falls back to clean FREUID (meaningless once --full_data is
+        # set, since va is IN training) -- avoid this combination, prefer the branches above.
     groups = parse_groups(args.aug)
     print(f"[{vname}] train={len(tr)} (freuid {(tr.source=='freuid').sum()}, idnet {(tr.source=='idnet').sum()}) "
           f"val={len(va)}  HELDOUT-IDNet={0 if idn_val is None else len(idn_val)}  "

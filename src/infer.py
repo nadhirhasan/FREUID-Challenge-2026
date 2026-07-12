@@ -57,6 +57,10 @@ def main():
     ap.add_argument("--eval_bs", type=int, default=16)
     ap.add_argument("--workers", type=int, default=16)
     ap.add_argument("--tta", type=str, default="none", help="none | scale (multi-resolution avg)")
+    ap.add_argument("--tta_scales", type=str, default="",
+                    help="comma list of scale factors for multi-scale logit-avg TTA, e.g. 0.85,0.9,1.0,1.1 "
+                         "(overrides --tta; scales are relative to the checkpoint's training res, "
+                         "rounded down to /14 for the ViT patch grid)")
     ap.add_argument("--device", type=str, default="cuda", help="cuda | cpu")
     ap.add_argument("--threads", type=int, default=0, help="torch CPU threads (0=default)")
     args = ap.parse_args()
@@ -86,6 +90,18 @@ def main():
         else:                    # full checkpoint (backbone included)
             model = FreuidModel(pretrained=False, lora_r=lora_r).to(device).eval()
             model.load_state_dict(ck["model"])
+        if args.tta_scales:
+            scales = [float(s) for s in args.tta_scales.split(",") if s.strip()]
+            lg = np.zeros(len(ids), np.float64)
+            for s in scales:
+                Hs, Ws = int(H * s) // 14 * 14, int(W * s) // 14 * 14
+                bs_s = args.eval_bs if s <= 1.0 else max(8, args.eval_bs // 2)
+                print(f"   TTA scale {s:g} -> {Hs}x{Ws}")
+                lg += to_logit(predict(model, ids, Hs, Ws, bs_s, args.workers, device))
+            p = 1 / (1 + np.exp(-lg / len(scales)))
+            logit_sum += to_logit(p)
+            del model
+            continue
         p = predict(model, ids, H, W, args.eval_bs, args.workers, device)
         if args.tta == "scale":
             H2, W2 = int(H * 1.2) // 14 * 14, int(W * 1.2) // 14 * 14
