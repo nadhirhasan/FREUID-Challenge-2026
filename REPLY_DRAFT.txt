@@ -2,9 +2,9 @@ FREUID Challenge 2026 - Reproducibility Package
 
 ---
 
-**Team name:** Nadhir Hasan
+**Team name:** nadhir hasan
 
-**Kaggle usernames:** Nadhir Hasan
+**Kaggle usernames:** nadhirhasan
 
 ---
 
@@ -70,6 +70,6 @@ docker run --rm --gpus all --network none \
 We confirm this repository at the stated commit reproduces our selected final
 submission and complies with the competition rules.
 
-**Signed (team captain):** Nadhir Hasan
+**Signed (team captain):** nadhirhasan
 
 **Date (UTC):** 2026-07-14
