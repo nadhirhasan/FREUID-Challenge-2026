@@ -12,17 +12,17 @@ image reproduces either one. See [`report/`](report/) for the full technical rep
 
 | Pick | Model | Training data | Public LB | Kaggle CSV (sha256) |
 |---|---|---|---|---|
-| 1 (**primary**) | `cv3` | FREUID only (fold-0 split, ~80% of train) | **0.00060** | `sub_cv3_pagg_tta4.csv` — `31b226c217ef09548f6ddc7bf53e742b33a0e9f05876fb2f12dd305ae8f0c206` |
-| 2 | `cv5_ep2` | 100% FREUID + 80k IDNet images (all 10 countries) | 0.00191 | `sub_cv5_full_ep2_pagg_tta4.csv` — `91392d1c8165feb87dae886be03c6e4e71d46cfa4f56067ffd4b8ed2096ebd73` |
+| 1 (**primary**) | `cv3` | FREUID only (fold-0 split, ~80% of train) | **0.00060** | `final_cv3_pagg_tta4_full.csv` — `d31f9b0163da7b3aa374b4c92cc2781b47650992c5655afcc46d381492c06048` |
+| 2 | `cv5_ep2` | 100% FREUID + 80k IDNet images (all 10 countries) | 0.00191 | `final_cv5_pagg_tta4_full.csv` — `c757f5ce81388fcd2796170387d2a75b4c87b96b383c617aa8aea72f2d9e0c5a` |
 
 Both picks use **identical inference-time options** — patch re-aggregation
 (top-5% of patch logits, branch weight 0.25) plus 4-scale logit-averaged TTA
 (0.85/0.9/1.0/1.1) — and come from the **same frozen commit**; they differ *only*
 in the weights file, selected by one documented environment variable
 (organizer-confirmed as inference orchestration under the code-freeze rules).
-Checksums are of the exact CSVs uploaded to Kaggle; note they contain model
-predictions for the 7,821 locally-available public-test images and a 0.5
-placeholder for the remaining hidden ids, and that bit-exact float reproduction
+Checksums are of the exact final CSVs uploaded to Kaggle (public-row predictions
+frozen since the pre-code-freeze probes, private rows predicted post-release with
+the frozen weights via `src/infer_private.py`); bit-exact float reproduction
 across different GPU hardware is not guaranteed (rank-identical scores are).
 
 Rationale (details in the report): `cv3` is the strongest in-domain model — best
@@ -168,7 +168,7 @@ identical TTA and patch-aggregation settings for both picks).
 ```bash
 docker build -t freuid-repro:local .
 
-# PICK 1 (primary) — reproduces Kaggle submission "sub_cv3_pagg_tta4.csv"
+# PICK 1 (primary) — reproduces Kaggle submission "final_cv3_pagg_tta4_full.csv"
 # (cv3 weights + patch re-agg top-5%/w=0.25 + 4-scale TTA).
 # These are the image defaults, so no -e flags are needed:
 docker run --rm --gpus all \
@@ -177,7 +177,7 @@ docker run --rm --gpus all \
   -v "$(pwd)/out:/submissions" \
   freuid-repro:local
 
-# PICK 2 — reproduces Kaggle submission "sub_cv5_full_ep2_pagg_tta4.csv"
+# PICK 2 — reproduces Kaggle submission "final_cv5_pagg_tta4_full.csv"
 # (cv5_ep2 weights; all other settings identical):
 docker run --rm --gpus all \
   --network none \
