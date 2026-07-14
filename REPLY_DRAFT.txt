@@ -11,7 +11,7 @@ FREUID Challenge 2026 - Reproducibility Package
 **Final Kaggle submission(s):**
 
 **Pick 1 (primary)** - `final_cv3_pagg_tta4_full.csv`
-- Submitted: 2026-07-13 ~18:00 UTC [VERIFY exact time on Kaggle submissions page]
+- Submitted: 2026-07-13 17:53:33 UTC (shown on Kaggle as Jul 13 2026 23:23:33 GMT+0530)
 - Public LB: **0.00060**
 - Reproduced via (image defaults, no flags needed):
 
@@ -25,7 +25,7 @@ docker run --rm --gpus all --network none \
 - sha256 of uploaded CSV: `d31f9b0163da7b3aa374b4c92cc2781b47650992c5655afcc46d381492c06048`
 
 **Pick 2** - `final_cv5_pagg_tta4_full.csv`
-- Submitted: 2026-07-14 ~02:03 UTC [VERIFY exact time on Kaggle submissions page]
+- Submitted: 2026-07-14 02:01:39 UTC (shown on Kaggle as Jul 14 2026 07:31:39 GMT+0530)
 - Public LB: **0.00191**
 - Reproduced via (one environment variable is the only difference):
 
