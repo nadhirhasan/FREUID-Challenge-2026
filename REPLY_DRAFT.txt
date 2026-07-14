@@ -1,25 +1,29 @@
 FREUID Challenge 2026 - Reproducibility Package
 ---
 Team name: Nadhir Hasan
-Kaggle usernames: [FILL: your Kaggle username]
+Kaggle usernames: Nadhir Hasan
 Final Kaggle submission(s):
-  Pick 1 - sub_cv3_pagg_tta4.csv - [FILL: date-time as shown on Kaggle] - public LB 0.00060
+  Pick 1 - final_cv3_pagg_tta4_full.csv - 2026-07-13 ~18:00 UTC [VERIFY exact time on Kaggle submissions page] - public LB 0.00060
     reproduced via: docker run --rm --gpus all --network none -v <test_images>:/data:ro -v <out>:/submissions freuid-repro:local
-    (image defaults; sha256 of uploaded CSV: 31b226c217ef09548f6ddc7bf53e742b33a0e9f05876fb2f12dd305ae8f0c206)
-  Pick 2 - sub_cv5_full_ep2_pagg_tta4.csv - [FILL: date-time as shown on Kaggle] - public LB 0.00191
+    (image defaults; sha256 of uploaded CSV: d31f9b0163da7b3aa374b4c92cc2781b47650992c5655afcc46d381492c06048)
+  Pick 2 - final_cv5_pagg_tta4_full.csv - 2026-07-14 ~02:03 UTC [VERIFY exact time on Kaggle submissions page] - public LB 0.00191
     reproduced via: docker run --rm --gpus all --network none -e FREUID_MODEL_PATH=/models/cv5_full_ep2.pt -v <test_images>:/data:ro -v <out>:/submissions freuid-repro:local
-    (sha256 of uploaded CSV: 91392d1c8165feb87dae886be03c6e4e71d46cfa4f56067ffd4b8ed2096ebd73)
-  Both picks come from the same frozen commit and weights, use identical
-  inference-time options (patch re-aggregation + 4-scale TTA), and differ only in
-  the weights file selected by the documented environment variable (see README
-  "Docker / reproduction" for the full submission <-> command <-> checksum mapping).
+    (sha256 of uploaded CSV: c757f5ce81388fcd2796170387d2a75b4c87b96b383c617aa8aea72f2d9e0c5a)
+  Both picks come from the same frozen commit and weights (weights unchanged since
+  before the private test release; lean-checkpoint format is audited bit-identical
+  by src/make_lean_ckpt.py --verify), use identical inference-time options (patch
+  re-aggregation + 4-scale TTA), and differ only in the weights file selected by
+  the documented environment variable. See README "Docker / reproduction" for the
+  full submission <-> command <-> checksum mapping. Public-row predictions are
+  identical to our pre-freeze submissions; private rows were predicted after the
+  private release with the frozen weights (inference only).
   We expect Pick 1 to rank higher if the private set matches the public
   distribution, and Pick 2 under distribution shift; please verify against
   whichever submission Kaggle uses for our final score.
 Repository (this should be public git repository): https://github.com/nadhirhasan/FREUID-Challenge-2026
-Commit SHA: 976b3cd0bae375a8c6fa39aa6af4a36a1f460e12
-Technical report (PDF): https://github.com/nadhirhasan/FREUID-Challenge-2026/blob/976b3cd0bae375a8c6fa39aa6af4a36a1f460e12/report/freuid_technical_report.pdf
+Commit SHA: 9fa3b0a453a8f9e1fcf7568792ee12237dea50fb
+Technical report (PDF): https://github.com/nadhirhasan/FREUID-Challenge-2026/blob/9fa3b0a453a8f9e1fcf7568792ee12237dea50fb/report/freuid_technical_report.pdf
 We confirm this repository at the stated commit reproduces our selected final
 submission and complies with the competition rules.
-Signed (team captain): [FILL: your Kaggle username]
-Date (UTC): [FILL: YYYY-MM-DD when posting]
+Signed (team captain): Nadhir Hasan
+Date (UTC): 2026-07-14
