@@ -61,9 +61,9 @@ docker run --rm --gpus all --network none \
 
 **Repository (public git):** https://github.com/nadhirhasan/FREUID-Challenge-2026
 
-**Commit SHA:** `9fa3b0a453a8f9e1fcf7568792ee12237dea50fb`
+**Commit SHA:** `60f601637c0285f8a70db93743d6afefc356f0d5`
 
-**Technical report (PDF):** https://github.com/nadhirhasan/FREUID-Challenge-2026/blob/9fa3b0a453a8f9e1fcf7568792ee12237dea50fb/report/freuid_technical_report.pdf
+**Technical report (PDF):** https://github.com/nadhirhasan/FREUID-Challenge-2026/blob/60f601637c0285f8a70db93743d6afefc356f0d5/report/freuid_technical_report.pdf
 
 ---
 
