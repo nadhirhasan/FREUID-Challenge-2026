@@ -12,7 +12,7 @@ FREUID Challenge 2026 - Reproducibility Package
 
 **Pick 1** - `final_cv3_pagg_tta4_full.csv`
 - Submitted: 2026-07-13 17:53:33 UTC (shown on Kaggle as Jul 13 2026 23:23:33 GMT+0530)
-- Public LB: 0.00060 · Private LB: 0.230
+- Public LB: 0.00060 (13th place) · Private LB: 0.2837
 - Reproduced via (image defaults, no flags needed):
 
 ```
@@ -26,7 +26,7 @@ docker run --rm --gpus all --network none \
 
 **Pick 2 (our winning submission)** - `final_cv5_pagg_tta4_full.csv`
 - Submitted: 2026-07-14 02:01:39 UTC (shown on Kaggle as Jul 14 2026 07:31:39 GMT+0530)
-- Public LB: 0.00191 · Private LB: **0.058**
+- Public LB: 0.00191 · Private LB: **0.0582**
 - Reproduced via (one environment variable is the only difference):
 
 ```

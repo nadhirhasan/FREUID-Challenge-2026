@@ -2,7 +2,7 @@
 
 **Team:** nadhir hasan (Nadhir Hasan) · **Kaggle username:** nadhirhasan
 
-**Final result: 1st place**, private leaderboard score **0.058** (winning submission: `cv5_ep2`,
+**Final result: 1st place**, private leaderboard score **0.0582** (winning submission: `cv5_ep2`,
 Pick 2). This repository is the full reproducibility package: training code, inference code,
 frozen model weights, and a runnable Docker container the organizers can execute in a
 network-isolated sandbox to reproduce both of our two selected final submissions.
@@ -52,7 +52,7 @@ data: a **re-aggregation of the per-patch MIL scores** and **4-scale test-time a
 | **Resolution** | 448×728, letterboxed |
 | **Inference-time enhancements** | patch re-aggregation (top-5% + attention, w=0.25/0.75) + 4-scale logit-avg TTA (0.85/0.9/1.0/1.1) |
 | **Public leaderboard** | 0.00191 |
-| **Private leaderboard (final, official)** | **0.058 — 1st place** |
+| **Private leaderboard (final, official)** | **0.0582 — 1st place** |
 
 Everything needed to retrain, re-run, and independently verify this exact model is in this
 repository — see [Training](#training) and [Docker / reproduction](#docker--reproduction).
@@ -65,8 +65,9 @@ stated up front contains *"previously unseen document types and fraud patterns..
 withheld"*) diverged from the public distribution, the two picks would diverge with it —
 giving us a hedge instead of a single bet.
 
-- **Pick 1 (`cv3`):** trained on FREUID data only. Best public score by far (0.00060), and
-  strong performance on a genuinely held-out, corruption-augmented slice of FREUID itself.
+- **Pick 1 (`cv3`):** trained on FREUID data only. Best public score by far (0.00060, 13th
+  place on the public leaderboard), and strong performance on a genuinely held-out,
+  corruption-augmented slice of FREUID itself.
   But on 35,874 real-world IDNet documents it never trained on, it scored at **chance level**
   (AuDET ≈ 0.50) — it had learned something highly specific to FREUID's own generation
   pipeline, with no evidence it would transfer to a different document distribution.
@@ -119,10 +120,10 @@ the actual Kaggle submissions (see [Docker / reproduction](#docker--reproduction
 
 ## Both selected final submissions
 
-| Pick | Model | Training data | Public LB | Private LB | Kaggle CSV (sha256) |
+| Pick | Model | Training data | Public LB (rank) | Private LB | Kaggle CSV (sha256) |
 |---|---|---|---|---|---|
-| 1 | `cv3` | FREUID only (fold-0 split, ~80% of train) | 0.00060 | 0.230 | `final_cv3_pagg_tta4_full.csv` — `d31f9b0163da7b3aa374b4c92cc2781b47650992c5655afcc46d381492c06048` |
-| **2 (winner)** | `cv5_ep2` | 100% FREUID + 80k IDNet images (all 10 countries) | 0.00191 | **0.058** | `final_cv5_pagg_tta4_full.csv` — `c757f5ce81388fcd2796170387d2a75b4c87b96b383c617aa8aea72f2d9e0c5a` |
+| 1 | `cv3` | FREUID only (fold-0 split, ~80% of train) | 0.00060 (13th) | 0.2837 | `final_cv3_pagg_tta4_full.csv` — `d31f9b0163da7b3aa374b4c92cc2781b47650992c5655afcc46d381492c06048` |
+| **2 (winner)** | `cv5_ep2` | 100% FREUID + 80k IDNet images (all 10 countries) | 0.00191 | **0.0582** | `final_cv5_pagg_tta4_full.csv` — `c757f5ce81388fcd2796170387d2a75b4c87b96b383c617aa8aea72f2d9e0c5a` |
 
 Both picks use **identical inference-time options** — patch re-aggregation (top-5% of patch
 logits, branch weight 0.25) plus 4-scale logit-averaged TTA (0.85/0.9/1.0/1.1) — and come from

@@ -48,9 +48,9 @@
 \maketitle
 
 \begin{tcolorbox}[colback=green!6,colframe=green!45!black,title=\textbf{Final result: 1st place}]
-\textbf{Winning submission (Pick 2, \texttt{cv5\_ep2}): private leaderboard score \textbf{0.058}.}
+\textbf{Winning submission (Pick 2, \texttt{cv5\_ep2}): private leaderboard score \textbf{0.0582}.}
 Our other selected submission (Pick 1, \texttt{cv3}) scored 0.00060 on the public
-leaderboard --- the best of any of our models --- but \textbf{0.230} on the private
+leaderboard --- the best of any of our models --- but \textbf{0.2837} on the private
 leaderboard, a $\sim$380$\times$ reversal. This report documents the two-pick,
 external-validation-first strategy that produced the winning model, why the
 public-leaderboard champion did not survive private evaluation, and the
@@ -79,8 +79,8 @@ erase-and-retype) built on manually annotated per-type face and text-field
 Section~\ref{sec:annotation-clarification}). The two picks use
 \emph{identical} inference-time options and differ only in training data.
 \textbf{Pick 1} (\texttt{cv3}) trains on FREUID only and maximizes in-domain
-performance (public leaderboard 0.00060, the best of any model we built) but
-collapsed to 0.230 on the private set. \textbf{Pick 2} (\texttt{cv5}, our
+performance (public leaderboard 0.00060, 13th place, the best of any model we
+built) but collapsed to 0.2837 on the private set. \textbf{Pick 2} (\texttt{cv5}, our
 winning submission) trains on 100\% of FREUID plus 80{,}000 images from the
 externally licensed IDNet dataset (CC0), trading public score (0.00191) for a
 measured order-of-magnitude improvement in cross-document-type robustness
@@ -401,11 +401,11 @@ by hash comparison).
     \toprule
     Model / configuration & Public $\downarrow$ & External $\downarrow$ & Private $\downarrow$ & Notes \\
     \midrule
-    Pick 2: \texttt{cv5} ep2 + re-agg + TTA4  & 0.00191 & \textbf{0.0116}$^{*}$ & \textbf{0.058} & \textbf{Winner (1st)} \\
+    Pick 2: \texttt{cv5} ep2 + re-agg + TTA4  & 0.00191 & \textbf{0.0116}$^{*}$ & \textbf{0.0582} & \textbf{Winner (1st)} \\
     \quad \texttt{cv5} ep2 raw                & 0.0035  & 0.0154 & --- & \\
     \quad \texttt{cv5} ep2 + re-agg only       & 0.00263 & 0.0137$^{\dagger}$ & --- & \\
     \quad \texttt{cv5} ep2 + TTA4 only         & 0.00369 & 0.0116 & --- & \\
-    Pick 1: \texttt{cv3} + re-agg + TTA4       & \textbf{0.00060} & --- & 0.230 & Selected, not winner \\
+    Pick 1: \texttt{cv3} + re-agg + TTA4       & \textbf{0.00060}$^{\S}$ & --- & 0.2837 & Selected, not winner \\
     \quad \texttt{cv3} + re-agg only           & 0.00086 & ---    & --- & \\
     \quad \texttt{cv3} raw                     & 0.00096 & 0.9727 & --- & chance-level ext. \\
     FREUID-only, 100\% data (\texttt{cv6}, ep3) & 0.00178 & 0.9424 & --- & not selected \\
@@ -417,7 +417,8 @@ by hash comparison).
   \vspace{2pt}
   {\footnotesize $^{*}$full-pool confirmation of the externally selected config;
   $^{\dagger}$12k-subsample estimate; $^{\ddagger}$4{,}000-image sample of the
-  same two countries, fully blind for this model (never trained on them).}
+  same two countries, fully blind for this model (never trained on them);
+  $^{\S}$13th place on the public leaderboard.}
 \end{table}
 
 \subsection{Why Pick 1 collapsed and Pick 2 won}

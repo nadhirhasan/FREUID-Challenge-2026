@@ -137,9 +137,9 @@ print("wrote architecture.png")
 # 4. Public vs private leaderboard result bar chart
 # ---------------------------------------------------------------------------
 fig, ax = plt.subplots(figsize=(7.5, 5))
-labels = ["cv3\n(Pick 1)", "cv5\n(Pick 2 — WINNER)"]
+labels = ["cv3\n(Pick 1, 13th public)", "cv5\n(Pick 2 — WINNER)"]
 public = [0.00060, 0.00191]
-private = [0.23, 0.058]
+private = [0.2837, 0.0582]
 x = np.arange(2)
 width = 0.32
 b1 = ax.bar(x - width/2, public, width, label="Public LB", color="#8fb8de")
@@ -152,7 +152,7 @@ ax.set_title("The leaderboard shake, in one picture:\npublic ranked cv3 first; p
              fontsize=12)
 for bars, vals in [(b1, public), (b2, private)]:
     for bar, v in zip(bars, vals):
-        ax.annotate(f"{v:.5f}" if v < 0.01 else f"{v:.3f}", (bar.get_x() + bar.get_width()/2, v),
+        ax.annotate(f"{v:.5f}" if v < 0.01 else f"{v:.4f}", (bar.get_x() + bar.get_width()/2, v),
                     textcoords="offset points", xytext=(0, 5), ha="center", fontsize=9.5, fontweight="bold")
 ax.legend(fontsize=10)
 ax.grid(axis="y", alpha=0.25, which="both")
