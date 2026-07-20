@@ -137,13 +137,13 @@ print("wrote architecture.png")
 # 4. Public vs private leaderboard result bar chart
 # ---------------------------------------------------------------------------
 fig, ax = plt.subplots(figsize=(7.5, 5))
-labels = ["cv3\n(Pick 1, 13th public)", "cv5\n(Pick 2 — WINNER)"]
+labels = ["cv3\n(Pick 1, 13th public)", "cv5\n(Pick 2 — currently leading, provisional)"]
 public = [0.00060, 0.00191]
 private = [0.2837, 0.0582]
 x = np.arange(2)
 width = 0.32
 b1 = ax.bar(x - width/2, public, width, label="Public LB", color="#8fb8de")
-b2 = ax.bar(x + width/2, private, width, label="Private LB (final)", color=["#cc4422", "#1a7a1a"])
+b2 = ax.bar(x + width/2, private, width, label="Private LB (provisional)", color=["#cc4422", "#1a7a1a"])
 ax.set_yscale("log")
 ax.set_ylabel("FREUID score (log scale, lower = better)")
 ax.set_xticks(x)

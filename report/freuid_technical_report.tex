@@ -34,7 +34,7 @@
 
 \title{%
   \textbf{The FREUID Challenge 2026}\\[0.3em]
-  \Large \textcolor{blue!50!black}{1st Place Solution}\\[0.5em]
+  \Large \textcolor{blue!50!black}{Provisional Rank-1 Solution}\\[0.5em]
   \large Technical Report --- \teamname
 }
 \author{%
@@ -47,12 +47,12 @@
 \begin{document}
 \maketitle
 
-\begin{tcolorbox}[colback=green!6,colframe=green!45!black,title=\textbf{Final result: 1st place}]
-\textbf{Winning submission (Pick 2, \texttt{cv5\_ep2}): private leaderboard score \textbf{0.0582}.}
+\begin{tcolorbox}[colback=green!6,colframe=green!45!black,title=\textbf{Provisional result: currently ranked 1st}]
+\textbf{Leading submission (Pick 2, \texttt{cv5\_ep2}): private leaderboard score \textbf{0.0582}} (private-leaderboard results are preliminary; the organizers have not yet completed reproducibility verification or officially confirmed final standings).
 Our other selected submission (Pick 1, \texttt{cv3}) scored 0.00060 on the public
 leaderboard --- the best of any of our models --- but \textbf{0.2837} on the private
 leaderboard, a $\sim$380$\times$ reversal. This report documents the two-pick,
-external-validation-first strategy that produced the winning model, why the
+external-validation-first strategy that produced the leading model, why the
 public-leaderboard champion did not survive private evaluation, and the
 evidence available \emph{before} the deadline that pointed to exactly this
 outcome.
@@ -81,18 +81,18 @@ Section~\ref{sec:annotation-clarification}). The two picks use
 \textbf{Pick 1} (\texttt{cv3}) trains on FREUID only and maximizes in-domain
 performance (public leaderboard 0.00060, 13th place, the best of any model we
 built) but collapsed to 0.2837 on the private set. \textbf{Pick 2} (\texttt{cv5}, our
-winning submission) trains on 100\% of FREUID plus 80{,}000 images from the
+leading submission) trains on 100\% of FREUID plus 80{,}000 images from the
 externally licensed IDNet dataset (CC0), trading public score (0.00191) for a
 measured order-of-magnitude improvement in cross-document-type robustness
 (FREUID Score 0.0116 vs.\ chance-level for FREUID-only models on 35{,}874
-held-out real-world documents) --- the property that determined final rank.
+held-out real-world documents) --- the property behind the current provisional rank.
 Both picks share two inference-time enhancements selected on external
 validation data and confirmed by isolated public-leaderboard probes: a
 re-aggregation of the per-patch MIL head and 4-scale logit-averaged
 test-time augmentation. We document why score calibration is provably a
 no-op for the FREUID metric, why we selected checkpoints and inference
 configurations on held-out external data rather than in-domain or
-public-leaderboard signal, and why that choice is what separated 1st place
+public-leaderboard signal, and why that choice is what currently separates a leading rank
 from what would otherwise have been a much lower final rank. Code, weights,
 and a network-isolated Docker container reproducing both picks from one
 image are provided in the linked repository.
@@ -152,12 +152,12 @@ sequence; a per-patch head scores each spatial token independently and aggregate
 into a single image-level fraud logit (aggregation details in
 Section~\ref{sec:postproc}). A sigmoid converts this logit to the submitted score
 in $[0,1]$; no calibration is applied (Section~\ref{sec:calibration}).
-Figure~\ref{fig:architecture} shows the full pipeline for the winning model.
+Figure~\ref{fig:architecture} shows the full pipeline for the leading model.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{figures/architecture.png}
-  \caption{Inference pipeline for \texttt{cv5} (the winning submission). Only
+  \caption{Inference pipeline for \texttt{cv5} (the leading submission). Only
   the blue stages contain trained parameters ($\approx$7M of $\approx$304M
   total); the orange stages are inference-time post-processing applied to
   \emph{both} selected picks (Section~\ref{sec:postproc}).}
@@ -188,7 +188,7 @@ $2\times10^{-4}$, weight decay 0.05/0 respectively), cosine learning-rate
 schedule with 5\% linear warmup, mixed precision (fp16). Both picks were trained
 on a single NVIDIA RTX A4500 (20GB).
 
-\textbf{Pick 2 (\texttt{cv5}, epoch 2) --- the winning submission.} 100\% of
+\textbf{Pick 2 (\texttt{cv5}, epoch 2) --- the leading submission.} 100\% of
 the FREUID training set (69{,}352 images) plus 80{,}000 balanced IDNet images
 spanning all 10 available countries ($\approx$149{,}000 images/epoch), 5
 scheduled epochs with per-epoch validation on 4{,}000 IDNet images sampled
@@ -298,7 +298,7 @@ score ties at the clip boundary distort the genuine-score quantile).
 \label{sec:external-data}
 We use the official \texttt{train/} images and \texttt{train\_labels.csv}
 metadata. Pick 1 trains on fold 0 of a stratified 5-fold split by
-(\texttt{type}$\times$\texttt{label}); Pick 2 (winning submission) trains on
+(\texttt{type}$\times$\texttt{label}); Pick 2 (leading submission) trains on
 100\% of the training set. All 5 FREUID document types are present in
 training in both cases.
 
@@ -350,7 +350,7 @@ labels were never used, seen, or referenced during model selection.
 predicted the actual outcome.} Every metric computed on FREUID-derived data
 (clean validation, corrupted validation, and the public leaderboard itself)
 ranked Pick 1 above Pick 2. Only the IDNet external benchmark ranked Pick 2
-above Pick 1 --- and Pick 2 is the model that won.
+above Pick 1 --- and Pick 2 is the model currently ranked ahead.
 
 \section{Inference}
 \label{sec:inference}
@@ -365,7 +365,7 @@ environment variables (inference orchestration only; identical frozen weights):
     \footnotesize\texttt{FREUID\_MODEL\_PATH=/models/cv3\_fold0.pt}\\
     \texttt{FREUID\_PATCH\_AGG=0.05,0.25}\\
     \texttt{FREUID\_TTA\_SCALES=0.85,0.9,1.0,1.1}\normalsize
-  \item \textbf{Pick 2 (winning submission):}\\
+  \item \textbf{Pick 2 (leading submission):}\\
     \footnotesize\texttt{-e FREUID\_MODEL\_PATH=/models/cv5\_full\_ep2.pt}\normalsize\\
     (all other settings identical --- the model path is the only difference
     between the two picks).
@@ -392,8 +392,8 @@ by hash comparison).
   \centering
   \caption{Main results (FREUID Score; lower is better). External = full
   35{,}874-image IDNet Estonia+Slovakia pool (blind for FREUID-only models;
-  see Section~\ref{sec:external-data} for Pick 2's caveat). Private = official
-  final leaderboard score.}
+  see Section~\ref{sec:external-data} for Pick 2's caveat). Private = provisional
+  private leaderboard score (pending organizer verification).}
   \label{tab:results}
   \small
   \setlength{\tabcolsep}{4.5pt}
@@ -401,11 +401,11 @@ by hash comparison).
     \toprule
     Model / configuration & Public $\downarrow$ & External $\downarrow$ & Private $\downarrow$ & Notes \\
     \midrule
-    Pick 2: \texttt{cv5} ep2 + re-agg + TTA4  & 0.00191 & \textbf{0.0116}$^{*}$ & \textbf{0.0582} & \textbf{Winner (1st)} \\
+    Pick 2: \texttt{cv5} ep2 + re-agg + TTA4  & 0.00191 & \textbf{0.0116}$^{*}$ & \textbf{0.0582} & \textbf{Leading (prov.)} \\
     \quad \texttt{cv5} ep2 raw                & 0.0035  & 0.0154 & --- & \\
     \quad \texttt{cv5} ep2 + re-agg only       & 0.00263 & 0.0137$^{\dagger}$ & --- & \\
     \quad \texttt{cv5} ep2 + TTA4 only         & 0.00369 & 0.0116 & --- & \\
-    Pick 1: \texttt{cv3} + re-agg + TTA4       & \textbf{0.00060}$^{\S}$ & --- & 0.2837 & Selected, not winner \\
+    Pick 1: \texttt{cv3} + re-agg + TTA4       & \textbf{0.00060}$^{\S}$ & --- & 0.2837 & Selected, currently 2nd \\
     \quad \texttt{cv3} + re-agg only           & 0.00086 & ---    & --- & \\
     \quad \texttt{cv3} raw                     & 0.00096 & 0.9727 & --- & chance-level ext. \\
     FREUID-only, 100\% data (\texttt{cv6}, ep3) & 0.00178 & 0.9424 & --- & not selected \\
@@ -421,7 +421,7 @@ by hash comparison).
   $^{\S}$13th place on the public leaderboard.}
 \end{table}
 
-\subsection{Why Pick 1 collapsed and Pick 2 won}
+\subsection{Why Pick 1 collapsed and Pick 2 currently leads}
 \label{sec:why}
 Figure~\ref{fig:dist} compares the public-vs-private score distributions of
 both picks. Both distributions shift in the same direction and by a similar
@@ -456,7 +456,7 @@ models (fold-based or full-data) are at chance on external documents regardless
 of their public score (Table~\ref{tab:results}); mixing IDNet into training is
 the single lever that produced non-trivial external performance, at a public
 cost that inference-time enhancements later recovered (0.0035 $\rightarrow$
-0.00191) --- and this is the lever that ultimately won the competition.
+0.00191) --- and this is the lever behind the current provisional lead.
 
 \noindent\textbf{Ablation --- inference-time enhancements.} Patch
 re-aggregation improved every model it was applied to (public: $-$10\% for
@@ -527,7 +527,7 @@ the IDNet authors for their permissively licensed dataset.
   \small
   \begin{tabular}{lll}
     \toprule
-    Hyperparameter & Pick 1 (\texttt{cv3}) & Pick 2 (\texttt{cv5} ep2, winner) \\
+    Hyperparameter & Pick 1 (\texttt{cv3}) & Pick 2 (\texttt{cv5} ep2, leading) \\
     \midrule
     Image size & \multicolumn{2}{c}{$448\times728$ (letterboxed)} \\
     Batch size (train) & \multicolumn{2}{c}{6 (accum 4, effective 24)} \\

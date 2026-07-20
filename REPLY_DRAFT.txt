@@ -24,7 +24,7 @@ docker run --rm --gpus all --network none \
 
 - sha256 of uploaded CSV: `d31f9b0163da7b3aa374b4c92cc2781b47650992c5655afcc46d381492c06048`
 
-**Pick 2 (our winning submission)** - `final_cv5_pagg_tta4_full.csv`
+**Pick 2 (our currently-leading submission)** - `final_cv5_pagg_tta4_full.csv`
 - Submitted: 2026-07-14 02:01:39 UTC (shown on Kaggle as Jul 14 2026 07:31:39 GMT+0530)
 - Public LB: 0.00191 · Private LB: **0.0582**
 - Reproduced via (one environment variable is the only difference):
@@ -57,7 +57,7 @@ docker run --rm --gpus all --network none \
   submission; please verify reproducibility against whichever submission Kaggle
   uses for our final score. Our technical report documents why we selected both
   picks in advance and includes a full analysis of the public/private divergence
-  (Section 5.1, "Why Pick 1 collapsed and Pick 2 won").
+  (Section 5.1, "Why Pick 1 collapsed and Pick 2 currently leads").
 
 ---
 

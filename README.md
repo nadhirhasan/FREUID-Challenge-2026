@@ -1,24 +1,25 @@
-# 🏆 FREUID Challenge 2026 — 1st Place Solution
+# 🏆 FREUID Challenge 2026 — Provisional Rank-1 Solution
 
 **Team:** nadhir hasan (Nadhir Hasan) · **Kaggle username:** nadhirhasan
 
-**Final result: 1st place**, private leaderboard score **0.0582** (winning submission: `cv5_ep2`,
-Pick 2). This repository is the full reproducibility package: training code, inference code,
+**Provisional result: currently ranked 1st** (private leaderboard results are
+preliminary and pending organizer verification), private leaderboard score **0.0582**
+(leading submission: `cv5_ep2`, Pick 2). This repository is the full reproducibility package: training code, inference code,
 frozen model weights, and a runnable Docker container the organizers can execute in a
 network-isolated sandbox to reproduce both of our two selected final submissions.
 
 ![Public vs private leaderboard result](report/figures/leaderboard_result.png)
 
 The public leaderboard ranked our two picks in the *opposite* order of the private
-leaderboard. That reversal — and why our winning model (`cv5_ep2`) survived it while our
+leaderboard. That reversal — and why our external-data model (`cv5_ep2`) survived it while our
 best-public-scoring model (`cv3`) did not — is the central story of this repository. It is
 explained in full in the [technical report](report/freuid_technical_report.pdf) and
 summarized below.
 
 ## Contents
 
-- [The winning submission — cv5](#the-winning-submission--cv5)
-- [Why cv5 won: the two-pick strategy explained](#why-cv5-won-the-two-pick-strategy-explained)
+- [The leading submission — cv5](#the-leading-submission--cv5)
+- [Why cv5 ranks ahead: the two-pick strategy explained](#why-cv5-ranks-ahead-the-two-pick-strategy-explained)
 - [About `annotations/type_fields.json` — is this "manual labeling"?](#about-annotationstype_fieldsjson--is-this-manual-labeling)
 - [Both selected final submissions](#both-selected-final-submissions)
 - [Method summary](#method-summary)
@@ -32,7 +33,7 @@ summarized below.
 
 ---
 
-## The winning submission — cv5
+## The leading submission — cv5
 
 `cv5_ep2` is a **DINOv2-L Vision Transformer** fine-tuned with a **LoRA adapter** (rank 16,
 our own from-scratch implementation) and a **per-patch multiple-instance-learning (MIL)
@@ -52,12 +53,12 @@ data: a **re-aggregation of the per-patch MIL scores** and **4-scale test-time a
 | **Resolution** | 448×728, letterboxed |
 | **Inference-time enhancements** | patch re-aggregation (top-5% + attention, w=0.25/0.75) + 4-scale logit-avg TTA (0.85/0.9/1.0/1.1) |
 | **Public leaderboard** | 0.00191 |
-| **Private leaderboard (final, official)** | **0.0582 — 1st place** |
+| **Private leaderboard (provisional)** | **0.0582 — currently rank 1** |
 
 Everything needed to retrain, re-run, and independently verify this exact model is in this
 repository — see [Training](#training) and [Docker / reproduction](#docker--reproduction).
 
-## Why cv5 won: the two-pick strategy explained
+## Why cv5 ranks ahead: the two-pick strategy explained
 
 Kaggle allowed two final submission picks. We deliberately selected two models trained on
 **different data regimes**, expecting that if the private test set (which the organizers
@@ -71,7 +72,7 @@ giving us a hedge instead of a single bet.
   But on 35,874 real-world IDNet documents it never trained on, it scored at **chance level**
   (AuDET ≈ 0.50) — it had learned something highly specific to FREUID's own generation
   pipeline, with no evidence it would transfer to a different document distribution.
-- **Pick 2 (`cv5_ep2`, the eventual winner):** trained on FREUID **plus** a large, diverse
+- **Pick 2 (`cv5_ep2`, the stronger-ranking pick on private data):** trained on FREUID **plus** a large, diverse
   slice of real identity documents. Nearly identical *ranking* of public-test images to `cv3`
   (Pearson 0.994) — so nothing was sacrificed on the data both picks were validated against —
   but a **measured, order-of-magnitude better** score (0.0116 vs. chance) on the external
@@ -86,8 +87,8 @@ Both models' prediction distributions shifted by a similar amount from public to
 (see the technical report's diversity/overfitting analysis for the full statistics) — but only
 one of them had ever been shown to handle that kind of shift correctly *before* the private
 set was released. That evidence — not the public leaderboard number — is what we built the
-final decision on, and it is what separated 1st place from a solution that would have finished
-far lower.
+final decision on, and it is what currently separates a leading private-LB rank from
+a solution that would have finished far lower.
 
 ## About `annotations/type_fields.json` — is this "manual labeling"?
 
@@ -123,7 +124,7 @@ the actual Kaggle submissions (see [Docker / reproduction](#docker--reproduction
 | Pick | Model | Training data | Public LB (rank) | Private LB | Kaggle CSV (sha256) |
 |---|---|---|---|---|---|
 | 1 | `cv3` | FREUID only (fold-0 split, ~80% of train) | 0.00060 (13th) | 0.2837 | `final_cv3_pagg_tta4_full.csv` — `d31f9b0163da7b3aa374b4c92cc2781b47650992c5655afcc46d381492c06048` |
-| **2 (winner)** | `cv5_ep2` | 100% FREUID + 80k IDNet images (all 10 countries) | 0.00191 | **0.0582** | `final_cv5_pagg_tta4_full.csv` — `c757f5ce81388fcd2796170387d2a75b4c87b96b383c617aa8aea72f2d9e0c5a` |
+| **2 (leading)** | `cv5_ep2` | 100% FREUID + 80k IDNet images (all 10 countries) | 0.00191 | **0.0582** | `final_cv5_pagg_tta4_full.csv` — `c757f5ce81388fcd2796170387d2a75b4c87b96b383c617aa8aea72f2d9e0c5a` |
 
 Both picks use **identical inference-time options** — patch re-aggregation (top-5% of patch
 logits, branch weight 0.25) plus 4-scale logit-averaged TTA (0.85/0.9/1.0/1.1) — and come from
@@ -182,7 +183,7 @@ splits/
   folds.csv           Stratified 5-fold split of the FREUID training set (fold 0 used)
 weights/
   cv3_fold0.pt        Pick 1: FREUID-only, fold 0, epoch 1 — LEAN checkpoint
-  cv5_full_ep2.pt     Pick 2 (WINNER): full-data FREUID+IDNet, epoch 2 — LEAN checkpoint
+  cv5_full_ep2.pt     Pick 2 (leading, provisional): full-data FREUID+IDNet, epoch 2 — LEAN checkpoint
 Dockerfile            Reproducibility container (see "Docker / reproduction" below)
 docker/
   prepare_submission.py  Container entrypoint (loads weights, runs inference + TTA + pagg)
@@ -221,7 +222,7 @@ and our own field/face annotations are included.
 
 ## Training
 
-**Winning model — `cv5_ep2` (100% FREUID + all-10-country IDNet):**
+**Leading model — `cv5_ep2` (100% FREUID + all-10-country IDNet):**
 
 ```bash
 python src/train.py \
@@ -259,7 +260,7 @@ The submitted checkpoint is epoch 1 of this run (`weights/cv3_fold0.pt`).
 (top-5%, w=0.25) used by both final picks:
 
 ```bash
-# Winning model: cv5_ep2 + patch re-agg + 4-scale TTA
+# Leading model: cv5_ep2 + patch re-agg + 4-scale TTA
 python src/infer_patchagg.py --ckpt weights/cv5_full_ep2.pt \
     --tta_scales 0.85,0.9,1.0,1.1 --out sub_cv5_full_ep2_pagg_tta4.csv
 
@@ -277,7 +278,7 @@ patch-aggregation settings for both picks).
 ```bash
 docker build -t freuid-repro:local .
 
-# WINNING SUBMISSION — reproduces Kaggle submission "final_cv5_pagg_tta4_full.csv"
+# LEADING SUBMISSION (provisional) — reproduces Kaggle submission "final_cv5_pagg_tta4_full.csv"
 # (cv5_ep2 weights + patch re-agg top-5%/w=0.25 + 4-scale TTA):
 docker run --rm --gpus all \
   --network none \
