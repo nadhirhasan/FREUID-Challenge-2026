@@ -20,7 +20,7 @@ summarized below.
 
 - [The leading submission — cv5](#the-leading-submission--cv5)
 - [Why cv5 ranks ahead: the two-pick strategy explained](#why-cv5-ranks-ahead-the-two-pick-strategy-explained)
-- [About `annotations/type_fields.json` — is this "manual labeling"?](#about-annotationstype_fieldsjson--is-this-manual-labeling)
+- [Attack-placement metadata (`annotations/type_fields.json`)](#attack-placement-metadata-annotationstype_fieldsjson)
 - [Both selected final submissions](#both-selected-final-submissions)
 - [Method summary](#method-summary)
 - [Repository layout](#repository-layout)
@@ -90,26 +90,29 @@ set was released. That evidence — not the public leaderboard number — is wha
 final decision on, and it is what currently separates a leading private-LB rank from
 a solution that would have finished far lower.
 
-## About `annotations/type_fields.json` — is this "manual labeling"?
-
-Short answer: **no** — but here is the full, explicit explanation, because this file is the
-one place in our pipeline that involved manual work, and we want it to be unambiguous under
-audit.
+## Attack-placement metadata (`annotations/type_fields.json`)
 
 `annotations/type_fields.json` records, for each of the 5 FREUID document types and 10 IDNet
-countries, the **pixel location of the face photo and text fields on that document template**
-— nothing more. It looks like this for one document type:
+countries (15 groups total), the **pixel location of the face photo and text fields on that
+document template** — nothing more. It looks like this for one document type:
 
 ![Example: manually annotated face/field boxes on a document template](report/figures/annotation_example.png)
 
-These boxes are **not a fraud/genuine label**, and they are **never applied to test or private
-data in any way**. Their only use is at **training time**, to place our synthetic fraud
-attacks (portrait swap, text-field edit, erase-and-retype) realistically on top of *genuine
-training images* — e.g. "the face goes here, not in the middle of the signature" — instead of
-pasting them at a random location. This is a geometric template annotation for a data
-augmentation tool, comparable in kind to specifying crop windows or keypoints for an image
-pipeline; it is categorically different from a human looking at a document and deciding "this
-one is fraudulent."
+**Why one annotation covers an entire group:** within each of the 15 groups, every image
+shares identical pixel dimensions (e.g. every `EGYPT/DL` image is exactly 1387×875; every
+`MAURITIUS/ID` image is exactly 1585×1000 — verified across sampled images from every group).
+This follows directly from how the documents were rendered/scanned onto a fixed template per
+type. Because of this, a single representative image per group was inspected once to record
+box coordinates, and those same coordinates are reused for every image in that group by
+construction — this is template-level geometry, not a per-image annotation process, and it
+covers 15 measurements total, not one per training image.
+
+These boxes are used **exclusively at training time**, to place our synthetic fraud attacks
+(portrait swap, text-field edit, erase-and-retype) realistically on top of *genuine training
+images* — e.g. "the face goes here, not in the middle of the signature" — instead of pasting
+them at a random location. This is the same category of metadata as specifying crop windows
+or keypoints for an image-augmentation pipeline. The boxes carry **no fraud/genuine
+information whatsoever** and are **never applied to test or private data in any way**.
 
 The actual fraud/genuine ground truth used everywhere in this project comes **exclusively**
 from the organizer-provided `train_labels.csv` and IDNet's own published metadata. No label
@@ -146,8 +149,8 @@ different GPU hardware is not guaranteed; rank-identical scores are.
   [`src/lora.py`](src/lora.py)) and a per-patch MIL classification head
   ([`src/model.py`](src/model.py)).
 - **Synthetic fraud generation:** an annotation-driven attack suite (portrait swap, cross-card
-  region swap, text-field edit, erase-and-retype) placed using the manually annotated
-  face/field boxes described [above](#about-annotationstype_fieldsjson--is-this-manual-labeling),
+  region swap, text-field edit, erase-and-retype) placed using the per-template face/field
+  boxes described [above](#attack-placement-metadata-annotationstype_fieldsjson),
   implemented in [`src/augment.py`](src/augment.py).
 - **Resolution:** 448×728, letterboxed (aspect-preserving).
 - **Loss:** Focal BCE (α=0.25, γ=2.0) on the whole-image logit.
@@ -178,7 +181,7 @@ src/                  Training + inference + evaluation code
   make_lean_ckpt.py    Converts full checkpoints -> lean (trained-params-only) weight files
   make_splits.py       Regenerates splits/folds.csv (stratified 5-fold, seed 42)
 annotations/
-  type_fields.json    Manual per-document-type face/text-field bounding boxes (see above)
+  type_fields.json    Per-template face/text-field bounding boxes, 15 groups (see above)
 splits/
   folds.csv           Stratified 5-fold split of the FREUID training set (fold 0 used)
 weights/

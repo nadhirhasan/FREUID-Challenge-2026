@@ -219,32 +219,40 @@ compared against a simpler untargeted self-blend-only baseline under an otherwis
 identical recipe, improved the public leaderboard score from 0.00169 to 0.00096
 in isolated ablation.
 
-\subsection{Annotation clarification: what \texttt{type\_fields.json} is (and is not)}
+\subsection{Attack-placement metadata: \texttt{type\_fields.json}}
 \label{sec:annotation-clarification}
-The only manual work in this pipeline is a set of per-document-type bounding
-boxes recording \emph{where the face photo and text fields sit on each
-document template} (5 FREUID types + 10 IDNet countries), stored in
-\texttt{annotations/type\_fields.json}. Figure~\ref{fig:annotation} shows an
-example. These boxes are \textbf{not a fraud/genuine label of any image} and
-are \textbf{never applied to test or private data}; their only use is at
-\emph{training time}, to place synthetic attacks (Section~\ref{sec:overview})
-realistically on genuine training images instead of at a random location. This
-is geometric template metadata for a data-augmentation tool, categorically
-different from a human classifying a document as fraudulent or genuine. All
-fraud/genuine ground truth used anywhere in this work comes exclusively from
-the organizer-provided \texttt{train\_labels.csv} and IDNet's published
-metadata; no label was created, inferred, or altered by us, and every score in
-both submitted CSVs was produced entirely by the deterministic Docker pipeline
-of Section~\ref{sec:inference} --- verified by an independent re-run of the
-container reproducing our uploaded predictions rank-identically.
+Synthetic attack placement (Section~\ref{sec:overview}) is driven by a set of
+per-document-type bounding boxes recording \emph{where the face photo and text
+fields sit on each document template} (5 FREUID types + 10 IDNet countries, 15
+groups total), stored in \texttt{annotations/type\_fields.json}.
+Figure~\ref{fig:annotation} shows an example. Within each of the 15 groups,
+every image shares identical pixel dimensions (e.g.\ every \texttt{EGYPT/DL}
+image is exactly $1387\times875$; every \texttt{MAURITIUS/ID} image is exactly
+$1585\times1000$ --- verified across sampled images from every group), a
+direct consequence of each type being rendered/scanned onto a fixed template.
+Consequently, a single representative image per group was inspected once to
+record box coordinates, and those coordinates are reused for every image in
+that group by construction: this is 15 template-level geometry measurements,
+not a per-image annotation process. The boxes carry \textbf{no fraud/genuine
+information} and are \textbf{never applied to test or private data}; their
+only use is at \emph{training time}, to place synthetic attacks realistically
+on genuine training images instead of at a random location --- the same
+category of metadata as crop windows or keypoints for an image-augmentation
+pipeline. All fraud/genuine ground truth used anywhere in this work comes
+exclusively from the organizer-provided \texttt{train\_labels.csv} and IDNet's
+published metadata; no label was created, inferred, or altered by us, and
+every score in both submitted CSVs was produced entirely by the deterministic
+Docker pipeline of Section~\ref{sec:inference} --- verified by an independent
+re-run of the container reproducing our uploaded predictions rank-identically.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.72\textwidth]{figures/annotation_example.png}
-  \caption{Example manual annotation on a genuine training image: boxes mark
-  where the face and text fields sit on this document \emph{template},
-  independent of any specific document instance. Used only to place synthetic
-  attacks during training; never used to label or score any test image.}
+  \caption{Example template annotation on a genuine training image: boxes mark
+  where the face and text fields sit on this document \emph{template} (one
+  measurement per 15 groups, reused for every image in the group). Used only
+  to place synthetic attacks during training; never used to label or score
+  any test image.}
   \label{fig:annotation}
 \end{figure}
 

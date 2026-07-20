@@ -53,8 +53,8 @@ for (x, y, bw, bh) in spec["faces"]:
 fig, ax = plt.subplots(figsize=(9, 6))
 ax.imshow(vis)
 ax.axis("off")
-ax.set_title("annotations/type_fields.json — geometric template metadata\n"
-              "(where a face/text field SITS on this document type — not a fraud/genuine label)",
+ax.set_title("annotations/type_fields.json — 1 of 15 template groups (5 FREUID + 10 IDNet)\n"
+              "one measurement per group, reused for every same-size image in that group",
               fontsize=12, pad=10)
 orange_patch = mpatches.Patch(color=(1, 0.647, 0), label="text-field box (for erase-retype / text-edit attack placement)")
 blue_patch = mpatches.Patch(color=(0, 0.667, 1), label="face box (for portrait-swap attack placement)")
@@ -126,7 +126,7 @@ for i, (label, color) in enumerate(boxes):
     x += bw_ + gap
 ax.set_xlim(0, x)
 ax.set_ylim(0, 2.4)
-ax.set_title("cv5 inference pipeline (winning submission) — trainable parameters only in the blue boxes (~7M of ~304M)",
+ax.set_title("cv5 inference pipeline (leading submission) — trainable parameters only in the blue boxes (~7M of ~304M)",
              fontsize=11.5, pad=6)
 plt.tight_layout()
 plt.savefig(f"{OUT}/architecture.png", dpi=160, bbox_inches="tight")
