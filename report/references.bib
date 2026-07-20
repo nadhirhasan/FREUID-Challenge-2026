@@ -11,8 +11,20 @@
   author       = {Guo, Hong and Sun, Xuan and Liu, Yu and Yang, Xun and Wang, Xin},
   year         = {2024},
   howpublished = {\url{https://arxiv.org/abs/2409.10472}},
-  note         = {CC BY 4.0 license; 8 training countries (ESP, ALB, AZE, FIN, GRC, LVA, RUS, SRB)
-                  and 2 held-out countries (EST, SVK) used for checkpoint selection in this work}
+  note         = {CC0 (public domain) license, per the dataset's official Zenodo release;
+                  all 10 available countries (ESP, ALB, AZE, FIN, GRC, LVA, RUS, SRB, EST, SVK)
+                  mixed into Pick 2 (\texttt{cv5}) training, with a disjoint-image (not
+                  disjoint-country) held-out slice used for checkpoint selection}
+}
+
+@inproceedings{deepid2025,
+  title        = {The {DeepID} Challenge of Detecting Synthetic Manipulations in {ID} Documents},
+  author       = {Korshunov, Pavel and others},
+  booktitle    = {ICCV 2025 Workshops (DeepID)},
+  year         = {2025},
+  howpublished = {\url{https://openaccess.thecvf.com/content/ICCV2025W/DeepID/papers/Korshunov_DeepID_Challenge_of_Detecting_Synthetic_Manipulations_in_ID_Documents_ICCVW_2025_paper.pdf}},
+  note         = {Winning solutions used whole-image inference at test time specifically to
+                  avoid resize-induced resampling artifacts destroying forensic signal}
 }
 
 @misc{dinov2,

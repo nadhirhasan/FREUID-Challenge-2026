@@ -15,6 +15,8 @@
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{enumitem}
+\usepackage{tcolorbox}
+\usepackage{float}
 
 \geometry{margin=2.5cm}
 \hypersetup{
@@ -31,7 +33,8 @@
 \newcommand{\commitsha}{0c034d5394794fb0e6b4c237e5c8fd536013b90c}
 
 \title{%
-  \textbf{The FREUID Challenge 2026}\\[0.4em]
+  \textbf{The FREUID Challenge 2026}\\[0.3em]
+  \Large \textcolor{blue!50!black}{1st Place Solution}\\[0.5em]
   \large Technical Report --- \teamname
 }
 \author{%
@@ -44,35 +47,63 @@
 \begin{document}
 \maketitle
 
+\begin{tcolorbox}[colback=green!6,colframe=green!45!black,title=\textbf{Final result: 1st place}]
+\textbf{Winning submission (Pick 2, \texttt{cv5\_ep2}): private leaderboard score \textbf{0.058}.}
+Our other selected submission (Pick 1, \texttt{cv3}) scored 0.00060 on the public
+leaderboard --- the best of any of our models --- but \textbf{0.230} on the private
+leaderboard, a $\sim$380$\times$ reversal. This report documents the two-pick,
+external-validation-first strategy that produced the winning model, why the
+public-leaderboard champion did not survive private evaluation, and the
+evidence available \emph{before} the deadline that pointed to exactly this
+outcome.
+\end{tcolorbox}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figures/leaderboard_result.png}
+  \caption{Public vs.\ private FREUID Score for both selected picks (log scale,
+  lower is better). The public leaderboard ranked \texttt{cv3} first; the
+  private leaderboard ranked \texttt{cv5} first, by a wide margin.}
+  \label{fig:leaderboard}
+\end{figure}
+
 \begin{abstract}
 We present our solution to the FREUID Challenge 2026 identity-document fraud
-detection task. Both of our selected final submissions use the same architecture
---- a DINOv2-L Vision Transformer with low-rank adapters (LoRA, rank 16) and a
-per-patch multiple-instance-learning (MIL) classification head at $448\times728$
-resolution --- trained with an annotation-driven synthetic fraud generator
-(portrait swap, cross-card region swap, text-field editing, erase-and-retype)
-built on manually labeled per-type face and text-field bounding boxes. The two
-picks use \emph{identical} inference-time options and differ only in training
-data: \textbf{Pick 1} trains on FREUID only and maximizes in-domain performance
-(public leaderboard 0.00060); \textbf{Pick 2} trains on 100\% of FREUID plus
-80{,}000 images from the externally licensed IDNet dataset, trading public score
-(0.00191) for a measured order-of-magnitude improvement in cross-document-type
-robustness (FREUID Score 0.0116 vs.\ chance-level for FREUID-only models on
-35{,}874 held-out real-world documents). Both picks share two inference-time
-enhancements selected on external validation data and confirmed by isolated
-public-leaderboard probes: a re-aggregation of the per-patch MIL head (mean of
-top-5\% patch logits, weight 0.25, blended with the attention branch) and
-4-scale logit-averaged test-time augmentation --- each improved every model it
-was applied to, and they compounded. We document why
-score calibration is provably a no-op for the FREUID metric, and why we selected
-checkpoints on held-out external data rather than in-domain validation. Code,
-weights, and a network-isolated Docker container reproducing both picks from one
+detection task. Both of our selected final submissions use the same
+architecture --- a DINOv2-L Vision Transformer with low-rank adapters (LoRA,
+rank 16) and a per-patch multiple-instance-learning (MIL) classification head
+at $448\times728$ resolution --- trained with an annotation-driven synthetic
+fraud generator (portrait swap, cross-card region swap, text-field editing,
+erase-and-retype) built on manually annotated per-type face and text-field
+\emph{location} metadata (never a fraud/genuine label; see
+Section~\ref{sec:annotation-clarification}). The two picks use
+\emph{identical} inference-time options and differ only in training data.
+\textbf{Pick 1} (\texttt{cv3}) trains on FREUID only and maximizes in-domain
+performance (public leaderboard 0.00060, the best of any model we built) but
+collapsed to 0.230 on the private set. \textbf{Pick 2} (\texttt{cv5}, our
+winning submission) trains on 100\% of FREUID plus 80{,}000 images from the
+externally licensed IDNet dataset (CC0), trading public score (0.00191) for a
+measured order-of-magnitude improvement in cross-document-type robustness
+(FREUID Score 0.0116 vs.\ chance-level for FREUID-only models on 35{,}874
+held-out real-world documents) --- the property that determined final rank.
+Both picks share two inference-time enhancements selected on external
+validation data and confirmed by isolated public-leaderboard probes: a
+re-aggregation of the per-patch MIL head and 4-scale logit-averaged
+test-time augmentation. We document why score calibration is provably a
+no-op for the FREUID metric, why we selected checkpoints and inference
+configurations on held-out external data rather than in-domain or
+public-leaderboard signal, and why that choice is what separated 1st place
+from what would otherwise have been a much lower final rank. Code, weights,
+and a network-isolated Docker container reproducing both picks from one
 image are provided in the linked repository.
 \end{abstract}
 
 \noindent\textbf{Competition:} The FREUID Challenge 2026 (IJCAI-ECAI 2026)\\
 \textbf{Kaggle team:} \kaggleteam\\
-\textbf{Code:} \url{https://github.com/nadhirhasan/FREUID-Challenge-2026} (commit \texttt{\commitsha})\\
+\textbf{Code:} \url{https://github.com/nadhirhasan/FREUID-Challenge-2026}\\
+\textbf{Commit:} \footnotesize\texttt{\commitsha}\normalsize\\
+
+\tableofcontents
 
 \section{Introduction}
 \label{sec:intro}
@@ -84,7 +115,12 @@ formalizes this with a training set covering 5 document types and a scoring metr
 (FREUID Score, Section~\ref{sec:results}) that combines a global ranking measure
 (AuDET) with a strict low-false-alarm operating point (APCER@1\%BPCER), penalizing
 solutions that overfit to easy global separability while failing at the
-operating point that matters for production KYC systems~\cite{freuid2026}.
+operating point that matters for production KYC systems~\cite{freuid2026}. The
+organizers explicitly warned that the private test set would contain
+``previously unseen document types and fraud patterns... intentionally
+withheld,'' and that public rank would not necessarily predict private rank.
+Our results (Figure~\ref{fig:leaderboard}) are a direct, measured
+confirmation of that warning.
 
 Our solution strategy is built around a specific empirical finding from our own
 development process: a classifier trained \emph{only} on the FREUID distribution
@@ -101,12 +137,14 @@ $\approx$95\% of the test data, and because a $\sim$1\% subpopulation of
 domain-shifted attacks can dominate the missed-attack count at sub-1\% APCER
 levels, we selected \emph{two} complementary final submissions: the strongest
 in-domain model, and a robustness hedge trained additionally on external
-real-document data.
+real-document data. The private results show this was the correct call: the
+in-domain model alone would have finished far down the leaderboard.
 
 \section{Method}
 \label{sec:method}
 
 \subsection{Overview}
+\label{sec:overview}
 Each input image is loaded at full resolution, converted to RGB, letterboxed
 (aspect-ratio-preserving resize + zero-padding) to a fixed $448\times728$ canvas,
 and normalized with standard ImageNet statistics. The backbone produces a token
@@ -114,6 +152,17 @@ sequence; a per-patch head scores each spatial token independently and aggregate
 into a single image-level fraud logit (aggregation details in
 Section~\ref{sec:postproc}). A sigmoid converts this logit to the submitted score
 in $[0,1]$; no calibration is applied (Section~\ref{sec:calibration}).
+Figure~\ref{fig:architecture} shows the full pipeline for the winning model.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/architecture.png}
+  \caption{Inference pipeline for \texttt{cv5} (the winning submission). Only
+  the blue stages contain trained parameters ($\approx$7M of $\approx$304M
+  total); the orange stages are inference-time post-processing applied to
+  \emph{both} selected picks (Section~\ref{sec:postproc}).}
+  \label{fig:architecture}
+\end{figure}
 
 \subsection{Model architecture}
 Backbone: \texttt{vit\_large\_patch14\_reg4\_dinov2} (DINOv2-L~\cite{dinov2} with
@@ -139,25 +188,28 @@ $2\times10^{-4}$, weight decay 0.05/0 respectively), cosine learning-rate
 schedule with 5\% linear warmup, mixed precision (fp16). Both picks were trained
 on a single NVIDIA RTX A4500 (20GB).
 
+\textbf{Pick 2 (\texttt{cv5}, epoch 2) --- the winning submission.} 100\% of
+the FREUID training set (69{,}352 images) plus 80{,}000 balanced IDNet images
+spanning all 10 available countries ($\approx$149{,}000 images/epoch), 5
+scheduled epochs with per-epoch validation on 4{,}000 IDNet images sampled
+exclusively from pool rows \emph{not} selected into the 80k training cap (same
+countries, zero row-level overlap --- a genuinely leak-free validation signal,
+Section~\ref{sec:external-data}). Epoch 2 was selected: its successor (epoch 3)
+improved the IDNet validation score further (0.0105 vs.\ 0.0166) but scored
+\emph{worse} on a public-leaderboard probe (0.007 vs.\ 0.0035) --- a reversal
+consistent with our finding that no single local metric reliably ranks
+checkpoints (Section~\ref{sec:validation}); training was stopped at that
+point, and this caution about trusting any single metric turned out to
+generalize to the public-vs-private relationship itself.
+
 \textbf{Pick 1 (\texttt{cv3}).} FREUID only: fold 0 of a stratified 5-fold split
 ($\approx$55{,}500 training images/epoch), 3 scheduled epochs; the submitted
 checkpoint is epoch 1, which had the best public-leaderboard probe.
 
-\textbf{Pick 2 (\texttt{cv5}, epoch 2).} 100\% of the FREUID training set
-(69{,}352 images) plus 80{,}000 balanced IDNet images spanning all 10 available
-countries ($\approx$149{,}000 images/epoch), 5 scheduled epochs with per-epoch
-validation on 4{,}000 IDNet images sampled exclusively from pool rows \emph{not}
-selected into the 80k training cap (same countries, zero row-level overlap).
-Epoch 2 was selected: its successor (epoch 3) improved the IDNet validation score
-(0.0105 vs.\ 0.0166) but scored \emph{worse} on a public-leaderboard probe (0.007
-vs.\ 0.0035), a reversal consistent with our finding that no single local metric
-reliably ranks checkpoints (Section~\ref{sec:validation}); training was stopped
-at that point.
-
 \textbf{Synthetic fraud generation.} 25\% of genuine training images (from both
 FREUID and IDNet sources) are converted to synthetic fraud examples each epoch,
 using one of four attack types, dispatched via manually annotated per-document-type
-face and text-field bounding boxes (Section~\ref{sec:external-data}):
+face and text-field bounding boxes (Section~\ref{sec:annotation-clarification}):
 cross-card region/portrait swap (donor of the same document type), text-field
 edit (same-line content shifted and re-blended), erase-and-retype (ink removed via
 inpainting, new text rendered with a system font), and a generic self-blend
@@ -166,6 +218,35 @@ fallback. Blending uses a mix of feathered alpha compositing and seamless
 compared against a simpler untargeted self-blend-only baseline under an otherwise
 identical recipe, improved the public leaderboard score from 0.00169 to 0.00096
 in isolated ablation.
+
+\subsection{Annotation clarification: what \texttt{type\_fields.json} is (and is not)}
+\label{sec:annotation-clarification}
+The only manual work in this pipeline is a set of per-document-type bounding
+boxes recording \emph{where the face photo and text fields sit on each
+document template} (5 FREUID types + 10 IDNet countries), stored in
+\texttt{annotations/type\_fields.json}. Figure~\ref{fig:annotation} shows an
+example. These boxes are \textbf{not a fraud/genuine label of any image} and
+are \textbf{never applied to test or private data}; their only use is at
+\emph{training time}, to place synthetic attacks (Section~\ref{sec:overview})
+realistically on genuine training images instead of at a random location. This
+is geometric template metadata for a data-augmentation tool, categorically
+different from a human classifying a document as fraudulent or genuine. All
+fraud/genuine ground truth used anywhere in this work comes exclusively from
+the organizer-provided \texttt{train\_labels.csv} and IDNet's published
+metadata; no label was created, inferred, or altered by us, and every score in
+both submitted CSVs was produced entirely by the deterministic Docker pipeline
+of Section~\ref{sec:inference} --- verified by an independent re-run of the
+container reproducing our uploaded predictions rank-identically.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.72\textwidth]{figures/annotation_example.png}
+  \caption{Example manual annotation on a genuine training image: boxes mark
+  where the face and text fields sit on this document \emph{template},
+  independent of any specific document instance. Used only to place synthetic
+  attacks during training; never used to label or score any test image.}
+  \label{fig:annotation}
+\end{figure}
 
 \subsection{Inference-time enhancements (post-processing)}
 \label{sec:postproc}
@@ -217,29 +298,25 @@ score ties at the clip boundary distort the genuine-score quantile).
 \label{sec:external-data}
 We use the official \texttt{train/} images and \texttt{train\_labels.csv}
 metadata. Pick 1 trains on fold 0 of a stratified 5-fold split by
-(\texttt{type}$\times$\texttt{label}); Pick 2 trains on 100\% of the training
-set. All 5 FREUID document types are present in training in both cases. We
-hand-annotated portrait and text-field bounding boxes for every document type
-(5 FREUID + 10 IDNet countries) to drive the synthetic attack generator
-precisely rather than at random image locations; these annotations are included
-in the repository.
+(\texttt{type}$\times$\texttt{label}); Pick 2 (winning submission) trains on
+100\% of the training set. All 5 FREUID document types are present in
+training in both cases.
 
 \subsection{External data and pre-trained models}
 \begin{itemize}[noitemsep]
   \item \textbf{DINOv2}~\cite{dinov2} pre-trained ViT-L/14 weights, via
     \texttt{timm} (Apache-2.0 license). Used by both picks.
-  \item \textbf{IDNet}~\cite{idnet2024} (synthetically generated but
-    realistically captured identity documents across 10 European countries),
-    CC BY 4.0 license, publicly available. Used by Pick 2 only: 80{,}000
-    balanced images across all 10 countries mixed into training; 4{,}000
-    disjoint images (same countries, zero row overlap) used for per-epoch
-    validation. For the \emph{external generalization benchmark} reported
-    throughout (Section~\ref{sec:validation}) we evaluate on the full
-    35{,}874-image pool of two countries (Estonia, Slovakia); for Pick 1 and
-    other FREUID-only models this is a fully blind test (those models never saw
-    IDNet in any form), while for Pick 2 it is partially optimistic (disjoint
-    images, but the countries appear in training) --- we state this caveat
-    wherever the number is used.
+  \item \textbf{IDNet}~\cite{idnet2024} (identity documents across 10 European
+    countries), \textbf{CC0 (public domain)}, publicly available. Used by
+    Pick 2 only: 80{,}000 balanced images across all 10 countries mixed into
+    training; 4{,}000 disjoint images (same countries, zero row overlap) used
+    for per-epoch validation. For the \emph{external generalization
+    benchmark} reported throughout (Section~\ref{sec:validation}) we evaluate
+    on the full 35{,}874-image pool of two countries (Estonia, Slovakia); for
+    Pick 1 and other FREUID-only models this is a fully blind test (those
+    models never saw IDNet in any form), while for Pick 2 it is partially
+    optimistic (disjoint images, but the countries appear in training) --- we
+    state this caveat wherever the number is used.
 \end{itemize}
 Both artifacts are publicly available under licenses compatible with the
 competition's external-data policy; no proprietary or non-freely-accessible data
@@ -269,6 +346,12 @@ in-domain generalization is separately supported by its genuinely held-out,
 corruption-augmented 20\% FREUID fold (FREUID Score 0.00019). Private test
 labels were never used, seen, or referenced during model selection.
 
+\textbf{This external-only signal is, in hindsight, the only signal that
+predicted the actual outcome.} Every metric computed on FREUID-derived data
+(clean validation, corrupted validation, and the public leaderboard itself)
+ranked Pick 1 above Pick 2. Only the IDNet external benchmark ranked Pick 2
+above Pick 1 --- and Pick 2 is the model that won.
+
 \section{Inference}
 \label{sec:inference}
 The Docker entrypoint (\texttt{docker/prepare\_submission.py}) discovers every
@@ -278,9 +361,12 @@ with columns \texttt{id,label}. One image reproduces both picks via documented
 environment variables (inference orchestration only; identical frozen weights):
 
 \begin{itemize}[noitemsep]
-  \item \textbf{Pick 1 (image defaults):} \texttt{FREUID\_MODEL\_PATH=/models/cv3\_fold0.pt},
-    \texttt{FREUID\_PATCH\_AGG=0.05,0.25}, \texttt{FREUID\_TTA\_SCALES=0.85,0.9,1.0,1.1}.
-  \item \textbf{Pick 2:} \texttt{-e FREUID\_MODEL\_PATH=/models/cv5\_full\_ep2.pt}
+  \item \textbf{Pick 1 (image defaults):}\\
+    \footnotesize\texttt{FREUID\_MODEL\_PATH=/models/cv3\_fold0.pt}\\
+    \texttt{FREUID\_PATCH\_AGG=0.05,0.25}\\
+    \texttt{FREUID\_TTA\_SCALES=0.85,0.9,1.0,1.1}\normalsize
+  \item \textbf{Pick 2 (winning submission):}\\
+    \footnotesize\texttt{-e FREUID\_MODEL\_PATH=/models/cv5\_full\_ep2.pt}\normalsize\\
     (all other settings identical --- the model path is the only difference
     between the two picks).
 \end{itemize}
@@ -293,38 +379,71 @@ $\approx$6.3\,h for the 142{,}818-image hidden set on our A4500 and
 $\approx$2--3\,h on an A100 (2--3$\times$ the A4500's FP16 throughput and
 memory bandwidth) --- within the 6-hour budget per pick, with batch size and
 decode threads tunable via environment variables for further headroom.
-Inference auto-detects CUDA and falls back to CPU if unavailable.
+Inference auto-detects CUDA and falls back to CPU if unavailable. Private-set
+predictions were generated by \texttt{src/infer\_private.py}, which predicts
+only the newly released hidden-row images and merges them with our
+already-uploaded public-row predictions, leaving those byte-identical (verified
+by hash comparison).
 
 \section{Results}
 \label{sec:results}
 
-\begin{table}[h]
+\begin{table}[H]
   \centering
   \caption{Main results (FREUID Score; lower is better). External = full
   35{,}874-image IDNet Estonia+Slovakia pool (blind for FREUID-only models;
-  see Section~\ref{sec:external-data} for Pick 2's caveat).}
+  see Section~\ref{sec:external-data} for Pick 2's caveat). Private = official
+  final leaderboard score.}
   \label{tab:results}
-  \begin{tabular}{lccl}
+  \small
+  \setlength{\tabcolsep}{4.5pt}
+  \begin{tabular}{lcccl}
     \toprule
-    Model / configuration & Public LB $\downarrow$ & External $\downarrow$ & Notes \\
+    Model / configuration & Public $\downarrow$ & External $\downarrow$ & Private $\downarrow$ & Notes \\
     \midrule
-    Pick 1: \texttt{cv3} + re-agg + TTA4            & \textbf{0.00060} & ---    & Selected (primary) \\
-    \quad \texttt{cv3} + re-agg only                & 0.00086 & ---    & \\
-    \quad \texttt{cv3} raw                          & 0.00096 & 0.9727 & chance-level externally \\
-    Pick 2: \texttt{cv5} ep2 + re-agg + TTA4        & 0.00191 & \textbf{0.0116}$^{*}$ & Selected (hedge) \\
-    \quad \texttt{cv5} ep2 raw                      & 0.0035  & 0.0154 & \\
-    \quad \texttt{cv5} ep2 + re-agg only            & 0.00263 & 0.0137$^{\dagger}$ & \\
-    \quad \texttt{cv5} ep2 + TTA4 only              & 0.00369 & 0.0116 & \\
-    FREUID-only, 100\% data (\texttt{cv6}, ep3)     & 0.00178 & 0.9424 & not selected \\
-    FREUID+IDNet fold model (\texttt{cv4}, ep2)     & 0.00467 & 0.0933$^{\ddagger}$ & earlier iteration \\
+    Pick 2: \texttt{cv5} ep2 + re-agg + TTA4  & 0.00191 & \textbf{0.0116}$^{*}$ & \textbf{0.058} & \textbf{Winner (1st)} \\
+    \quad \texttt{cv5} ep2 raw                & 0.0035  & 0.0154 & --- & \\
+    \quad \texttt{cv5} ep2 + re-agg only       & 0.00263 & 0.0137$^{\dagger}$ & --- & \\
+    \quad \texttt{cv5} ep2 + TTA4 only         & 0.00369 & 0.0116 & --- & \\
+    Pick 1: \texttt{cv3} + re-agg + TTA4       & \textbf{0.00060} & --- & 0.230 & Selected, not winner \\
+    \quad \texttt{cv3} + re-agg only           & 0.00086 & ---    & --- & \\
+    \quad \texttt{cv3} raw                     & 0.00096 & 0.9727 & --- & chance-level ext. \\
+    FREUID-only, 100\% data (\texttt{cv6}, ep3) & 0.00178 & 0.9424 & --- & not selected \\
+    FREUID+IDNet fold model (\texttt{cv4}, ep2) & 0.00467 & 0.0933$^{\ddagger}$ & --- & earlier iteration \\
     \bottomrule
   \end{tabular}
+  \normalsize
 
   \vspace{2pt}
   {\footnotesize $^{*}$full-pool confirmation of the externally selected config;
   $^{\dagger}$12k-subsample estimate; $^{\ddagger}$4{,}000-image sample of the
   same two countries, fully blind for this model (never trained on them).}
 \end{table}
+
+\subsection{Why Pick 1 collapsed and Pick 2 won}
+\label{sec:why}
+Figure~\ref{fig:dist} compares the public-vs-private score distributions of
+both picks. Both distributions shift in the same direction and by a similar
+magnitude (KS statistic 0.262 for Pick 1, 0.263 for Pick 2; mean score
+increases of +0.201 and +0.171 respectively) --- evidence that the private
+set genuinely differs in composition (a higher fraction of clear fraud
+examples and/or unseen-type content), rather than one specific model
+degrading. What differed was each model's \emph{prior} capability on that
+kind of content: Pick 1 had no demonstrated ability to generalize beyond the
+FREUID generator's own distribution (Section~\ref{sec:validation}), while
+Pick 2 had a directly measured, order-of-magnitude advantage on real external
+documents before the private set was ever released. The private leaderboard
+result is consistent with that prior evidence, not a surprise given it.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/score_distribution.png}
+  \caption{Public vs.\ private prediction distributions for both picks. Both
+  shift together, consistent with a genuinely different private-set
+  composition rather than model-specific overfitting; see
+  Section~\ref{sec:why}.}
+  \label{fig:dist}
+\end{figure}
 
 \noindent\textbf{Ablation --- attack realism.} Holding the architecture, data
 split, and all other hyperparameters fixed, replacing an untargeted
@@ -336,7 +455,7 @@ models (fold-based or full-data) are at chance on external documents regardless
 of their public score (Table~\ref{tab:results}); mixing IDNet into training is
 the single lever that produced non-trivial external performance, at a public
 cost that inference-time enhancements later recovered (0.0035 $\rightarrow$
-0.00191).
+0.00191) --- and this is the lever that ultimately won the competition.
 
 \noindent\textbf{Ablation --- inference-time enhancements.} Patch
 re-aggregation improved every model it was applied to (public: $-$10\% for
@@ -350,7 +469,8 @@ isolation and in combination before selection.
 \section{Reproducibility}
 \label{sec:repro}
 \begin{itemize}[noitemsep]
-  \item \textbf{Repository:} \url{https://github.com/nadhirhasan/FREUID-Challenge-2026}, commit \texttt{\commitsha}.
+  \item \textbf{Repository:} \url{https://github.com/nadhirhasan/FREUID-Challenge-2026}\\
+    \textbf{Commit:} \footnotesize\texttt{\commitsha}\normalsize
   \item \textbf{One Docker image, both picks:} \texttt{docker build -t freuid-repro:local .}
     from the repository root; run commands for each pick (and the
     submission$\,\leftrightarrow\,$command$\,\leftrightarrow\,$checksum mapping)
@@ -364,13 +484,21 @@ isolation and in combination before selection.
     343 backbone tensors of the full training checkpoints are bit-identical to
     the timm release, and lean-loaded models produce bit-identical fp32 logits
     to the full checkpoints.
-  \item \textbf{Submitted CSVs (sha256):}
-    \texttt{sub\_cv3\_pagg.csv} = \texttt{9f547e04\ldots{}aa376a6};
-    \texttt{sub\_cv5\_full\_ep2\_pagg\_tta4.csv} = \texttt{91392d1c\ldots{}96ebd73}
-    (full hashes in \texttt{README.md}). CSVs contain model predictions for the
-    7{,}821 locally available public-test images and a 0.5 placeholder for
-    hidden ids; bit-exact float reproduction across differing GPU hardware is
-    not guaranteed, rank-identical scores are.
+  \item \textbf{Submitted CSVs (sha256), final (private-set-inclusive) predictions:}\\
+    \footnotesize
+    \texttt{final\_cv3\_pagg\_tta4\_full.csv} = \texttt{d31f9b01\ldots{}92c06048}\\
+    \texttt{final\_cv5\_pagg\_tta4\_full.csv} = \texttt{c757f5ce\ldots{}2d9e0c5a}
+    \normalsize\\
+    (full hashes in \texttt{README.md}). Public-row predictions in these files are
+    byte-identical to our pre-code-freeze probes; private rows were predicted
+    after the private release using the same frozen weights (inference only).
+    Bit-exact float reproduction across differing GPU hardware is not
+    guaranteed, rank-identical scores are.
+  \item \textbf{Weight freeze:} both checkpoints were committed to the
+    repository before the private test set was released; no training,
+    fine-tuning, or checkpoint change occurred afterward. Only inference
+    orchestration and documentation changed post-freeze, per the competition
+    rules.
   \item \textbf{Dependencies:} Python 3.11, PyTorch 2.6.0 (+cu124), timm 1.0.27,
     opencv-python-headless 4.10.0.84 --- see \texttt{docker/requirements.txt}.
   \item \textbf{Randomness:} training uses unseeded per-worker RNGs for
@@ -393,12 +521,12 @@ the IDNet authors for their permissively licensed dataset.
 \appendix
 \section{Hyperparameters}
 \label{app:hparams}
-\begin{table}[h]
+\begin{table}[H]
   \centering
   \small
   \begin{tabular}{lll}
     \toprule
-    Hyperparameter & Pick 1 (\texttt{cv3}) & Pick 2 (\texttt{cv5} ep2) \\
+    Hyperparameter & Pick 1 (\texttt{cv3}) & Pick 2 (\texttt{cv5} ep2, winner) \\
     \midrule
     Image size & \multicolumn{2}{c}{$448\times728$ (letterboxed)} \\
     Batch size (train) & \multicolumn{2}{c}{6 (accum 4, effective 24)} \\
@@ -419,6 +547,7 @@ the IDNet authors for their permissively licensed dataset.
 \section{Additional ablations}
 See Section~\ref{sec:results} for the controlled single-lever ablations (attack
 realism; data mixing; inference-time enhancements) that produced the final
-two-pick configuration.
+two-pick configuration, and Section~\ref{sec:why} for the distributional
+analysis explaining the public/private divergence.
 
 \end{document}
