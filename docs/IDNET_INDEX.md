@@ -58,9 +58,13 @@ src/eval_external.py  (full EST_scanned + SVK_scanned pool)
 
 ## What was selected (and what was not)
 
-- **Source:** the Hugging Face release [`cactuslab/IDNet-2025`](https://huggingface.co/datasets/cactuslab/IDNet-2025),
-  **not** the Zenodo release. It ships one plain archive and one `_scanned` archive for each of
-  10 European countries.
+- **Source:** the Hugging Face copy [`cactuslab/IDNet-2025`](https://huggingface.co/datasets/cactuslab/IDNet-2025).
+  It ships one plain archive and one `_scanned` archive for each of 10 European countries.
+- **Note on Zenodo:** the technical report's IDNet reference cites the dataset's official
+  Zenodo release. That citation is about the dataset and its license. The files used for this
+  submission were **not** downloaded from Zenodo, and the Zenodo archives are packaged
+  differently: one `.zip` per country (e.g. `EST.zip`) with different sizes, and no separate
+  `_scanned` archives. To match `cv5`, use the Hugging Face copy.
 - **Used:** the `_scanned` archive for all 10 countries: `ALB_scanned`, `AZE_scanned`,
   `ESP_scanned`, `EST_scanned`, `FIN_scanned`, `GRC_scanned`, `LVA_scanned`, `RUS_scanned`,
   `SRB_scanned`, `SVK_scanned`. The scanned variants add scanner background, shadows and
@@ -125,17 +129,25 @@ This one command runs three stages, all in [`src/external_data.py`](../src/exter
      _archives/                       *.tar.gz (no images; ignored by the indexer)
      EST_scanned/
        scanned/
-         positive/                    genuine
-         fraud5_inpaint_and_rewrite/  fraud
-         fraud6_crop_and_replace/     fraud
-         ...                          (JSON metadata, not indexed)
+         positive/                         genuine (.jpg)
+         positive_info/                    one JSON per image
+         fraud5_inpaint_and_rewrite/       fraud (.jpg)
+         fraud5_inpaint_and_rewrite_info/  one JSON per image
+         fraud6_crop_and_replace/          fraud (.jpg)
+         fraud6_crop_and_replace_info/     one JSON per image
      ESP_scanned/
        scanned/ ...
      ...
    ```
-   The indexer ignores non-image files. The cropper (Step 2) uses per-image rotation metadata
-   from `<data folder>_info/<stem>.json` when it exists and falls back to a purely geometric
-   crop when it does not.
+   Each image has a JSON file with the same name in the matching `_info` folder. It records the
+   settings used to simulate the scan: brightness, contrast, noise, shadow, the `rotate` angle,
+   card corner positions, and so on. The indexer skips these files because they are not images;
+   the cropper in Step 2 reads `rotate` from them.
+
+   For reference, `EST_scanned` contains 5,979 `positive`, 5,979 `fraud5_inpaint_and_rewrite`
+   and 5,978 `fraud6_crop_and_replace` images (17,936 in total), each with its JSON. Every
+   country has two fraud folders for its one genuine folder, so the raw pool is roughly
+   **2:1 fraud to genuine**. `EST_scanned` is almost exactly that.
 
 3. **Index** (`index()`). Every file under `external/idnet/` is scanned recursively. Only
    image extensions are kept (`.jpg .jpeg .png .bmp .tif .tiff`), and each image gets a label
@@ -164,15 +176,17 @@ orientation instead.
 
 **What happens to each row of `idnet_index.csv`**, in `crop_card_meta()` in `src/external_data.py`:
 
-1. **Undo the scan rotation if metadata exists.** The script looks for a per-image JSON in a
-   sibling folder named `<data folder>_info/<image stem>.json`. If it finds one, it reads the
-   `rotate` angle (0 if missing) and rotates the image back by that angle. The canvas is
+1. **Undo the scan rotation using the metadata.** The script looks for a per-image JSON in a
+   sibling folder named `<data folder>_info/<image stem>.json`. In the scanned archives every
+   image has one (checked for `EST_scanned`: each image folder and its `_info` folder hold the
+   same number of files), so this is the branch that actually ran. It reads the `rotate` angle
+   (0 if missing) and rotates the image back by that angle. The canvas is
    enlarged with a white border so no corner is cut off (`_rotate_expand`). Then it crops
    tightly (`_bbox_crop`):
    - convert to grayscale; pixels **darker than 235** count as card;
    - apply a 25×25 morphological close;
    - take the bounding box of the largest contour, plus 2 px of padding.
-2. **Otherwise, crop geometrically** (`crop_document(orient=False)`). The same mask is built
+2. **Fallback, if the JSON is missing or unreadable: crop geometrically** (`crop_document(orient=False)`). The same mask is built
    (threshold 235, 25×25 close), the largest contour is found, and `cv2.minAreaRect` fits a
    rotated rectangle to it. The rectangle is **forced to landscape** (long edge horizontal),
    the image is rotated to straighten the card, and the card is cut out with `getRectSubPix`.
@@ -268,7 +282,9 @@ idn_val = unused.groupby("label", group_keys=False).apply(
 
 - **Training:** 40,000 genuine and 40,000 fraud rows, drawn uniformly at random from the
   **pooled** 10 countries. Nothing is stratified or capped per country, so each country's
-  share of the 80k simply matches its share of the pool within each label.
+  share of the 80k simply matches its share of the pool within each label. The pool is about
+  2:1 fraud to genuine, so the 40k genuine rows are a much larger fraction of all genuine images
+  than the 40k fraud rows are of all fraud images.
 - **Validation (selects the checkpoint each epoch):** 2,000 genuine and 2,000 fraud rows drawn
   from pool rows that were *not* picked for training. The countries are the same, but no image
   appears in both sets.
@@ -323,8 +339,9 @@ These scripts are published exactly as they were run. Watch out for these when r
 ## Source and license
 
 IDNet: Guo et al., *IDNet: A Novel Dataset for Identity Document Analysis and Fraud Detection
-Research* ([arXiv:2409.10472](https://arxiv.org/abs/2409.10472)). The copy used here was
-downloaded from the Hugging Face release
+Research* ([arXiv:2409.10472](https://arxiv.org/abs/2409.10472)). IDNet's official release is on
+Zenodo, which the technical report cites; the copy used here was downloaded from the
+Hugging Face release
 [`cactuslab/IDNet-2025`](https://huggingface.co/datasets/cactuslab/IDNet-2025); check that
 dataset card for the current license and attribution terms before redistributing anything
 derived from it.
