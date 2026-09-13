@@ -220,6 +220,11 @@ src/                  Training + inference + evaluation code
   pagg_tta_combo.py     Combined patch-agg x TTA validation grid
   make_lean_ckpt.py    Converts full checkpoints -> lean (trained-params-only) weight files
   make_splits.py       Regenerates splits/folds.csv (stratified 5-fold, seed 42)
+  external_data.py     IDNet download/extract/raw index + card-cropping functions
+  precrop_idnet.py     Crops IDNet once -> external/idnet_cropped_index.csv
+  build_cropped_index.py  Rebuilds idnet_cropped_index.csv from the cropped folder alone
+docs/
+  IDNET_INDEX.md      Step-by-step walkthrough for building the IDNet index
 annotations/
   type_fields.json    Per-template face/text-field bounding boxes, 15 groups (see above)
 splits/
@@ -256,9 +261,11 @@ full checkpoints.
   under `the-freuid-challenge-dataset/` at the repo root (`train/`, `train_labels.csv`, ...)
   matching [`src/data.py`](src/data.py)'s expected layout.
 - **IDNet** (used by `cv5_ep2` training and by the external validation protocol): **CC0**
-  (public domain), obtain from the dataset's official release and build a flat index CSV
-  (`id,path,label,type,source`) at `external/idnet_cropped_index.csv`; `type` values are
-  per-country codes (e.g. `ESP_scanned`, `EST_scanned`, ...).
+  (public domain). Build the flat index CSV (`id,path,label,type,source`) at
+  `external/idnet_cropped_index.csv` with the exact scripts used for this submission
+  (`src/external_data.py` → `src/precrop_idnet.py`); `type` values are per-country codes
+  (e.g. `ESP_scanned`, `EST_scanned`, ...). Full step-by-step walkthrough — sources, selection,
+  cropping, and how training samples from the index: [`docs/IDNET_INDEX.md`](docs/IDNET_INDEX.md).
 
 Neither dataset is redistributed in this repository (size + competition terms); only the code
 and our own field/face annotations are included.
